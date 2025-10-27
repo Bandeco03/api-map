@@ -5,10 +5,13 @@ import * as echarts from 'echarts/core'
 import { MapChart } from 'echarts/charts'
 import { TooltipComponent, VisualMapComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
-import brazilGeoJson from '../../public/brazil.json'
+import brazilGeoJson from '../brazil-states.json'
 import axios from 'axios'
 
 const realTimePower = ref(true)
+const loading = ref(false)
+const selectedStates = ref([])
+const totalPower = ref(0)
 
 // Register required ECharts modules
 echarts.use([MapChart, TooltipComponent, VisualMapComponent, CanvasRenderer])
@@ -17,38 +20,40 @@ echarts.registerMap('BRA', brazilGeoJson)
 
 // Mapeamento de código para nome do estado
 const codeToStateName = {
-  '11': 'Rondônia',
   '12': 'Acre',
-  '13': 'Amazonas',
-  '14': 'Roraima',
-  '15': 'Pará',
+  '27': 'Alagoas',
   '16': 'Amapá',
-  '17': 'Tocantins',
-  '21': 'Maranhão',
-  '22': 'Piauí',
-  '23': 'Ceará',
-  '24': 'Rio Grande do Norte',
-  '25': 'Paraíba',
-  '26': 'Pernambuco',
-  '53': 'Distrito Federal',
-  '28': 'Sergipe',
+  '13': 'Amazonas',
   '29': 'Bahia',
-  '31': 'Minas Gerais',
+  '23': 'Ceará',
   '32': 'Espírito Santo',
-  '33': 'Rio de Janeiro',
-  '35': 'São Paulo',
-  '41': 'Paraná',
-  '42': 'Santa Catarina',
-  '43': 'Rio Grande do Sul',
-  '50': 'Mato Grosso do Sul',
-  '51': 'Mato Grosso',
   '52': 'Goiás',
-  '27': 'Alagoas'
+  '21': 'Maranhão',
+  '51': 'Mato Grosso',
+  '50': 'Mato Grosso do Sul',
+  '31': 'Minas Gerais',
+  '15': 'Pará',
+  '25': 'Paraíba',
+  '41': 'Paraná',
+  '26': 'Pernambuco',
+  '22': 'Piauí',
+  '33': 'Rio de Janeiro',
+  '24': 'Rio Grande do Norte',
+  '43': 'Rio Grande do Sul',
+  '11': 'Rondônia',
+  '14': 'Roraima',
+  '42': 'Santa Catarina',
+  '35': 'São Paulo',
+  '28': 'Sergipe',
+  '17': 'Tocantins',
+  '53': 'Distrito Federal'
 }
 
 const stateData = ref([])
 
 async function fetchData() {
+  loading.value = true
+  totalPower.value = 0
   const url = 'https://gateway.isolarcloud.com.hk/openapi/getPowerStationInfoPowerByCodeList'
   const headers = {
     'Content-Type': 'application/json',
@@ -66,6 +71,7 @@ async function fetchData() {
     if (response.data && response.data.result_code === '1' && response.data.result_data) {
       stateData.value = response.data.result_data.map(item => {
         const stateName = codeToStateName[item.code] || `Estado ${item.code}`
+        totalPower.value += Number(item.state_realtime_power || 0) / 1000000000 // Converter para GW
         if (realTimePower.value) {
           return {
             name: stateName,
@@ -97,6 +103,8 @@ async function fetchData() {
     }
   } catch (error) {
     console.error('Erro ao buscar dados:', error)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -118,13 +126,16 @@ const option = ref({
     }
   },
   visualMap: {
+    type: 'continuous',
     min: 0,
     max: 2500,
     left: 'left',
     top: 'bottom',
     text: ['Alto', 'Baixo'],
+    title: ['Potência (MW)'],
     inRange: { color: ['#e0f7fa', '#0288d1'] },
-    calculable: true
+    calculable: true,
+    show: true
   },
   series: [
     {
@@ -132,12 +143,81 @@ const option = ref({
       map: 'BRA',
       roam: false,
       layoutCenter: ['50%', '50%'],
-      layoutSize: '90%',
-      aspectScale: 0.9,
-      data: stateData.value
+      layoutSize: '100%',
+      aspectScale: 0.95,
+      data: stateData.value,
+      emphasis: {
+        itemStyle: {
+          areaColor: '#ffd700',
+          borderColor: '#ff8c00',
+          borderWidth: 2
+        }
+      },
+      select: {
+        itemStyle: {
+          areaColor: '#ff6b6b',
+          borderColor: '#c92a2a',
+          borderWidth: 2
+        }
+      }
     }
   ]
 })
+
+// Função para lidar com cliques no mapa
+const handleMapClick = (params) => {
+  if (params.componentType === 'series' && params.seriesType === 'map') {
+    const stateName = params.name
+    const stateInfo = stateData.value.find(s => s.name === stateName)
+
+    if (stateInfo) {
+      const index = selectedStates.value.findIndex(s => s.name === stateName)
+      if (index === -1) {
+        // Adicionar estado à lista
+        selectedStates.value.push(stateInfo)
+      } else {
+        // Remover estado da lista
+        selectedStates.value.splice(index, 1)
+      }
+      // Atualizar o mapa para refletir a seleção visual
+      updateMapSelection()
+    }
+  }
+}
+
+// Função para remover estado da lista
+const removeState = (stateName) => {
+  const index = selectedStates.value.findIndex(s => s.name === stateName)
+  if (index !== -1) {
+    selectedStates.value.splice(index, 1)
+    updateMapSelection()
+  }
+}
+
+// Função para limpar todos os estados selecionados
+const clearSelection = () => {
+  selectedStates.value = []
+  // Forçar atualização imediata do mapa
+  option.value.series[0].data = stateData.value.map(state => ({
+    ...state,
+    itemStyle: undefined
+  }))
+}
+
+// Função para atualizar a visualização dos estados selecionados no mapa
+const updateMapSelection = () => {
+  option.value.series[0].data = stateData.value.map(state => {
+    const isSelected = selectedStates.value.some(s => s.name === state.name)
+    return {
+      ...state,
+      itemStyle: isSelected ? {
+        areaColor: '#ff6b6b',
+        borderColor: '#c92a2a',
+        borderWidth: 2
+      } : undefined
+    }
+  })
+}
 
 import { onMounted } from 'vue'
 onMounted(() => {
@@ -146,16 +226,241 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <button @click="fetchData" style="margin: 10px; padding: 10px 20px; cursor: pointer;">
-      Carregar Dados da API
-    </button>
-    <button @click="realTimePower = !realTimePower; fetchData()" style="margin: 10px; padding: 10px 20px; cursor: pointer;">
-      Mostrar {{ realTimePower ? 'Potência Instalada' : 'Potência Ativa' }}
-    </button>
-    <v-chart :option="option" autoresize style="height: 600px; width: 100%;" />
+  <div class="main-container">
     <header>
-      {{ realTimePower }}
+      {{totalPower.toFixed(2)}} GW de potência total ativa
     </header>
+    <div class="controls">
+      <button @click="fetchData" class="update-btn">
+        Carregar Dados da API
+      </button>
+      <button @click="realTimePower = !realTimePower; fetchData()" class="toggle-btn">
+        Mostrar {{ realTimePower ? 'Potência Instalada' : 'Potência Ativa' }}
+      </button>
+    </div>
+
+    <!-- Spinner de carregamento -->
+    <div v-if="loading" class="spinner-overlay">
+      <div class="spinner"></div>
+      <p class="loading-text">Carregando dados...</p>
+    </div>
+
+    <div class="content-wrapper">
+      <!-- Mapa -->
+      <div class="map-container">
+        <v-chart
+          :option="option"
+          autoresize
+          style="height: 600px; width: 100%;"
+          @click="handleMapClick"
+        />
+      </div>
+
+      <!-- Painel de comparação -->
+      <div class="comparison-panel">
+        <div class="panel-header">
+          <h3>Estados Selecionados</h3>
+          <button v-if="selectedStates.length > 0" @click="clearSelection" class="clear-btn">
+            Limpar Tudo
+          </button>
+        </div>
+
+        <div v-if="selectedStates.length === 0" class="empty-state">
+          <p>Clique nos estados no mapa para compará-los</p>
+        </div>
+
+        <div v-else class="states-list">
+          <div
+            v-for="state in selectedStates"
+            :key="state.name"
+            class="state-card"
+          >
+            <div class="state-header">
+              <h4>{{ state.name }}</h4>
+              <button @click="removeState(state.name)" class="remove-btn">×</button>
+            </div>
+            <div class="state-data">
+              <div class="data-row">
+                <span class="label">Potência Ativa:</span>
+                <span class="value">{{ (state.activePower / 1000000).toFixed(2) }} MW</span>
+              </div>
+              <div class="data-row">
+                <span class="label">Potência Instalada:</span>
+                <span class="value">{{ (state.totalPower / 1000000).toFixed(2) }} MW</span>
+              </div>
+              <div class="data-row">
+                <span class="label">Utilização:</span>
+                <span class="value">{{ ((state.activePower / state.totalPower) * 100).toFixed(1) }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+h3 {
+  color: #0288d1;
+}
+
+.main-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
+}
+
+button {
+
+  border: none;
+  border-radius: 15px;
+  font-size: 16px;
+  margin: 0 10px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.update-btn {
+  color: hsla(160, 100%, 37%, 1);
+  background-color: hsla(160, 100%, 37%, 0.2);
+}
+
+.toggle-btn {
+  color: rgba(2, 136, 209, 1);
+  background-color: rgba(2, 136, 209, 0.2);
+}
+
+.spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #0288d1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #0288d1;
+  font-weight: 600;
+}
+
+.content-wrapper {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.map-container {
+  flex: 2;
+  position: relative;
+}
+
+.comparison-panel {
+  flex: 1;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-left: 20px;
+  padding: 20px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.clear-btn {
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.empty-state {
+  text-align: center;
+  color: #888;
+}
+
+.states-list {
+  margin-top: 10px;
+}
+
+.state-card {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+.state-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: #ff6b6b;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.state-data {
+  margin-top: 10px;
+}
+
+.data-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px 0;
+}
+
+.label {
+  font-weight: 500;
+  color: #333;
+}
+
+.value {
+  font-weight: 600;
+  color: #0288d1;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
