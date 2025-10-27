@@ -5,12 +5,13 @@ import * as echarts from 'echarts/core'
 import { MapChart } from 'echarts/charts'
 import { TooltipComponent, VisualMapComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
-import brazilGeoJson from '../brazil.json'
+import brazilGeoJson from '../brazil-states.json'
 import axios from 'axios'
 
 const realTimePower = ref(true)
 const loading = ref(false)
 const selectedStates = ref([])
+const totalPower = ref(0)
 
 // Register required ECharts modules
 echarts.use([MapChart, TooltipComponent, VisualMapComponent, CanvasRenderer])
@@ -52,6 +53,7 @@ const stateData = ref([])
 
 async function fetchData() {
   loading.value = true
+  totalPower.value = 0
   const url = 'https://gateway.isolarcloud.com.hk/openapi/getPowerStationInfoPowerByCodeList'
   const headers = {
     'Content-Type': 'application/json',
@@ -69,6 +71,7 @@ async function fetchData() {
     if (response.data && response.data.result_code === '1' && response.data.result_data) {
       stateData.value = response.data.result_data.map(item => {
         const stateName = codeToStateName[item.code] || `Estado ${item.code}`
+        totalPower.value += Number(item.state_realtime_power || 0) / 1000000000 // Converter para GW
         if (realTimePower.value) {
           return {
             name: stateName,
@@ -140,8 +143,8 @@ const option = ref({
       map: 'BRA',
       roam: false,
       layoutCenter: ['50%', '50%'],
-      layoutSize: '95%',
-      aspectScale: 0.9,
+      layoutSize: '100%',
+      aspectScale: 0.95,
       data: stateData.value,
       emphasis: {
         itemStyle: {
@@ -224,6 +227,9 @@ onMounted(() => {
 
 <template>
   <div class="main-container">
+    <header>
+      {{totalPower.toFixed(2)}} GW de potência total ativa
+    </header>
     <div class="controls">
       <button @click="fetchData" class="update-btn">
         Carregar Dados da API
