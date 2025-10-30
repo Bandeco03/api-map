@@ -1,10 +1,10 @@
 <script setup>
-import { ref } from 'vue'
+import {onMounted, ref} from 'vue'
 import VChart from 'vue-echarts'
 import * as echarts from 'echarts/core'
-import { MapChart } from 'echarts/charts'
-import { TooltipComponent, VisualMapComponent } from 'echarts/components'
-import { CanvasRenderer } from 'echarts/renderers'
+import {MapChart} from 'echarts/charts'
+import {TooltipComponent, VisualMapComponent} from 'echarts/components'
+import {CanvasRenderer} from 'echarts/renderers'
 import brazilGeoJson from '../brazil-states.json'
 import axios from 'axios'
 import apiService from '../services/api.js'
@@ -12,7 +12,8 @@ import apiService from '../services/api.js'
 const realTimePower = ref(true)
 const loading = ref(false)
 const selectedStates = ref([])
-const totalPower = ref(0)
+const totalActivePower = ref(0)
+const totalInstalledPower = ref(0)
 
 // Register required ECharts modules
 echarts.use([MapChart, TooltipComponent, VisualMapComponent, CanvasRenderer])
@@ -55,7 +56,7 @@ const stateData = ref([])
 async function fetchData() {
   loading.value = true
   totalPower.value = 0
-  
+
   try {
     // Try to use the backend API first
     let response
@@ -74,14 +75,15 @@ async function fetchData() {
         token: '110295_b1f25dda84f640c7acc6456bbbec9a47',
         appkey: '664780B4B466AB6F19DF393D5055D977'
       }
-      const axiosResponse = await axios.post(url, data, { headers })
+      const axiosResponse = await axios.post(url, data, {headers})
       response = axiosResponse.data
     }
 
     if (response && response.result_code === '1' && response.result_data) {
       stateData.value = response.result_data.map(item => {
         const stateName = codeToStateName[item.code] || `Estado ${item.code}`
-        totalPower.value += Number(item.state_realtime_power || 0) / 1000000000 // Converter para GW
+        totalActivePower.value += Number(item.state_realtime_power || 0) / 1000000000 // Converter para GW
+        totalInstalledPower.value += Number(item.state_installed_power || 0) / 1000000000 // Converter para GW
         if (realTimePower.value) {
           return {
             name: stateName,
@@ -119,7 +121,6 @@ async function fetchData() {
 }
 
 
-
 const option = ref({
   tooltip: {
     trigger: 'item',
@@ -143,7 +144,7 @@ const option = ref({
     top: 'bottom',
     text: ['Alto', 'Baixo'],
     title: ['Potência (MW)'],
-    inRange: { color: ['#e0f7fa', '#0288d1'] },
+    inRange: {color: ['#e0f7fa', '#0288d1']},
     calculable: true,
     show: true
   },
@@ -229,7 +230,6 @@ const updateMapSelection = () => {
   })
 }
 
-import { onMounted } from 'vue'
 onMounted(() => {
   fetchData()
 })
@@ -238,7 +238,8 @@ onMounted(() => {
 <template>
   <div class="main-container">
     <header>
-      {{totalPower.toFixed(2)}} GW de potência total ativa
+      {{ totalActivePower.toFixed(2) }} GW de potência total ativa |
+      {{ totalInstalledPower.toFixed(2) }} GW de potência total instalada
     </header>
     <div class="controls">
       <button @click="fetchData" class="update-btn">
@@ -259,10 +260,10 @@ onMounted(() => {
       <!-- Mapa -->
       <div class="map-container">
         <v-chart
-          :option="option"
-          autoresize
-          style="height: 600px; width: 100%;"
-          @click="handleMapClick"
+            :option="option"
+            autoresize
+            style="height: 600px; width: 100%;"
+            @click="handleMapClick"
         />
       </div>
 
@@ -281,9 +282,9 @@ onMounted(() => {
 
         <div v-else class="states-list">
           <div
-            v-for="state in selectedStates"
-            :key="state.name"
-            class="state-card"
+              v-for="state in selectedStates"
+              :key="state.name"
+              class="state-card"
           >
             <div class="state-header">
               <h4>{{ state.name }}</h4>
@@ -470,7 +471,11 @@ button {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>
