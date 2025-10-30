@@ -68,7 +68,7 @@ async function fetchData() {
       const url = 'https://gateway.isolarcloud.com.hk/openapi/getPowerStationInfoPowerByCodeList'
       const headers = {
         'Content-Type': 'application/json',
-        'x-access-key': '3g1nrc7c59kxygt2i7idana49jpvw01f',
+        'x-access-key': import.meta.env.VITE_FALLBACK_SUNGROW_ACCESS_KEY,
         'sys_code': '901'
       }
       const data = {
