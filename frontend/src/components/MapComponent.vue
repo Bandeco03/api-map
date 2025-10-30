@@ -55,7 +55,8 @@ const stateData = ref([])
 
 async function fetchData() {
   loading.value = true
-  totalPower.value = 0
+  totalActivePower.value = 0
+  totalInstalledPower.value = 0
 
   try {
     // Try to use the backend API first
@@ -72,8 +73,8 @@ async function fetchData() {
         'sys_code': '901'
       }
       const data = {
-        token: '110295_b1f25dda84f640c7acc6456bbbec9a47',
-        appkey: '664780B4B466AB6F19DF393D5055D977'
+        token: import.meta.env.VITE_FALLBACK_SUNGROW_TOKEN,
+        appkey: import.meta.env.VITE_FALLBACK_SUNGROW_APPKEY
       }
       const axiosResponse = await axios.post(url, data, {headers})
       response = axiosResponse.data
