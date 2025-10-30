@@ -34,12 +34,12 @@ async def get_power_data() -> Dict[str, Any]:
     url = "https://gateway.isolarcloud.com.hk/openapi/getPowerStationInfoPowerByCodeList"
     headers = {
         "Content-Type": "application/json",
-        "x-access-key": os.getenv("API_ACCESS_KEY", "3g1nrc7c59kxygt2i7idana49jpvw01f"),
-        "sys_code": os.getenv("API_SYS_CODE", "901")
+        "x-access-key": os.getenv("API_ACCESS_KEY"),
+        "sys_code": "901"
     }
     data = {
-        "token": os.getenv("API_TOKEN", "110295_b1f25dda84f640c7acc6456bbbec9a47"),
-        "appkey": os.getenv("API_APPKEY", "664780B4B466AB6F19DF393D5055D977")
+        "token": os.getenv("API_TOKEN"),
+        "appkey": os.getenv("API_APPKEY"),
     }
 
     async with httpx.AsyncClient() as client:
