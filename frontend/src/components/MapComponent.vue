@@ -7,10 +7,10 @@ import {TooltipComponent, VisualMapComponent} from 'echarts/components'
 import {CanvasRenderer} from 'echarts/renderers'
 import brazilGeoJson from '../brazil-states.json'
 import axios from 'axios'
-import apiService from '../services/api.js'
+import emitter from "@/eventBus.js";
 
 const realTimePower = ref(true)
-const loading = ref(false)
+
 const selectedStates = ref([])
 const totalActivePower = ref(0)
 const totalInstalledPower = ref(0)
@@ -54,7 +54,6 @@ const codeToStateName = {
 const stateData = ref([])
 
 async function fetchData() {
-  loading.value = true
   totalActivePower.value = 0
   totalInstalledPower.value = 0
 
@@ -116,8 +115,6 @@ async function fetchData() {
     }
   } catch (error) {
     console.error('Erro ao buscar dados:', error)
-  } finally {
-    loading.value = false
   }
 }
 
@@ -232,7 +229,7 @@ const updateMapSelection = () => {
 }
 
 onMounted(() => {
-  fetchData()
+  emitter.on('api-data', fetchData)
 })
 </script>
 
@@ -242,20 +239,8 @@ onMounted(() => {
       {{ totalActivePower.toFixed(2) }} GW de potência total ativa |
       {{ totalInstalledPower.toFixed(2) }} GW de potência total instalada
     </header>
-    <div class="controls">
-      <button @click="fetchData" class="update-btn">
-        Carregar Dados da API
-      </button>
-      <button @click="realTimePower = !realTimePower; fetchData()" class="toggle-btn">
-        Mostrar {{ realTimePower ? 'Potência Instalada' : 'Potência Ativa' }}
-      </button>
-    </div>
 
-    <!-- Spinner de carregamento -->
-    <div v-if="loading" class="spinner-overlay">
-      <div class="spinner"></div>
-      <p class="loading-text">Carregando dados...</p>
-    </div>
+
 
     <div class="content-wrapper">
       <!-- Mapa -->
@@ -323,12 +308,6 @@ h3 {
   height: 100vh;
 }
 
-.controls {
-  display: flex;
-  justify-content: center;
-  margin: 10px 0;
-}
-
 button {
 
   border: none;
@@ -337,46 +316,6 @@ button {
   margin: 0 10px;
   padding: 10px 20px;
   cursor: pointer;
-}
-
-.update-btn {
-  color: hsla(160, 100%, 37%, 1);
-  background-color: hsla(160, 100%, 37%, 0.2);
-}
-
-.toggle-btn {
-  color: rgba(2, 136, 209, 1);
-  background-color: rgba(2, 136, 209, 0.2);
-}
-
-.spinner-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.8);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid #0288d1;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-.loading-text {
-  margin-top: 20px;
-  font-size: 18px;
-  color: #0288d1;
-  font-weight: 600;
 }
 
 .content-wrapper {
@@ -469,14 +408,5 @@ button {
 .value {
   font-weight: 600;
   color: #0288d1;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
 }
 </style>
