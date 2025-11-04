@@ -229,7 +229,9 @@ const updateMapSelection = () => {
 }
 
 onMounted(() => {
-  emitter.on('api-data', fetchData)
+  emitter.on('api-data', (data) => {
+    fetchData(data)
+  })
 })
 </script>
 

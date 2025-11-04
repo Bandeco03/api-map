@@ -26,9 +26,9 @@ onBeforeMount(() => {
   fetchData()
 })
 
-onMounted(() => {
-  emitter.on('update-data', fetchData)
-})
+// onMounted(() => {
+//   emitter.on('update-data', fetchData)
+// })
 </script>
 
 <template>
