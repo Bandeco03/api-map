@@ -23,9 +23,42 @@ class ApiService {
   async getPowerData() {
     try {
       const response = await this.client.get('/api/power-data')
+      // Adaptar o formato de resposta do banco de dados
+      if (response.data && response.data.data) {
+        return JSON.parse(response.data.data)
+      }
       return response.data
     } catch (error) {
       console.error('Error fetching power data:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Fetch power data history
+   * @param {number} limit - Number of records to fetch
+   * @returns {Promise} Historical power data
+   */
+  async getPowerDataHistory(limit = 100) {
+    try {
+      const response = await this.client.get(`/api/power-data/history?limit=${limit}`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching power data history:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Trigger immediate data fetch from external API
+   * @returns {Promise} Fetched data
+   */
+  async fetchNow() {
+    try {
+      const response = await this.client.get('/api/power-data/fetch-now')
+      return response.data
+    } catch (error) {
+      console.error('Error triggering immediate fetch:', error)
       throw error
     }
   }
