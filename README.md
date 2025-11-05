@@ -219,11 +219,3 @@ python main.py
 
 ### Frontend (.env)
 - `VITE_API_URL`: Backend API URL (default: http://localhost:8000)
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License.
