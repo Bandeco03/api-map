@@ -2,6 +2,7 @@
 import MapComponent from './components/MapComponent.vue'
 import FetchAPIButton from "@/components/FetchAPIButton.vue";
 import LoadingScreen from "@/components/LoadingScreen.vue";
+import LineChart from "@/components/LineChart.vue";
 </script>
 
 <template>
@@ -10,6 +11,9 @@ import LoadingScreen from "@/components/LoadingScreen.vue";
     <FetchAPIButton />
     <div>
       <MapComponent />
+    </div>
+    <div>
+      <LineChart />
     </div>
   </main>
 </template>

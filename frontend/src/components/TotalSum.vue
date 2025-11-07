@@ -12,7 +12,10 @@ onMounted(() => {
 </script>
 
 <template>
-
+  <div>
+    <h2>Total de Potência Ativa: {{ api_utils.totalActivePowerGW.toFixed(2) }} GW</h2>
+    <h2>Total de Potência Instalada: {{ api_utils.totalInstalledPowerGW.toFixed(2) }} GW</h2>
+  </div>
 </template>
 
 <style scoped>

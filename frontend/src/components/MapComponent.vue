@@ -12,6 +12,7 @@ import emitter from "@/eventBus.js";
 const selectedStates = ref([])
 const totalActivePower = ref(0)
 const totalInstalledPower = ref(0)
+const activePowerRate = ref(0)
 
 // Register required ECharts modules
 echarts.use([MapChart, TooltipComponent, VisualMapComponent, CanvasRenderer])
@@ -23,6 +24,7 @@ const stateData = ref([])
 async function fetchData(response) {
   totalActivePower.value = 0
   totalInstalledPower.value = 0
+  activePowerRate.value = 0
 
   try {
     // Process the data using apiUtils
@@ -34,6 +36,7 @@ async function fetchData(response) {
       // Calculate totals
       totalActivePower.value = stateData.value.reduce((sum, state) => sum + state.activePower, 0) / 1000000000 // Convert to GW
       totalInstalledPower.value = stateData.value.reduce((sum, state) => sum + state.totalPower, 0) / 1000000000 // Convert to GW
+      activePowerRate.value = stateData.value.reduce((sum, state) => sum + state.activePowerRate, 0)
 
       // Atualizar opções do mapa
       option.value.series[0].data = stateData.value
@@ -62,7 +65,8 @@ const option = ref({
         return `
           <b>${params.name}</b><br/>
           Potência ativa: <b>${(d.activePower / 1000000).toFixed(2)}</b> MW<br/>
-          Potência instalada: <b>${(d.totalPower / 1000000).toFixed(2)}</b> MW
+          Potência instalada: <b>${(d.totalPower / 1000000).toFixed(2)}</b> MW <br/>
+          Representação total: <b>${(d.activePowerRate).toFixed(2)}</b>%
         `
       }
       return `<b>${params.name}</b><br/>Sem dados`
@@ -92,7 +96,7 @@ const option = ref({
       data: stateData.value,
       label: {
         show: true,
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: 'bold',
         color: '#000000',
         formatter: (params) => {
@@ -103,7 +107,8 @@ const option = ref({
             const sigla = geoData.properties.sigla
             if (stateInfo) {
               const powerMW = (stateInfo.activePower / 1000000).toFixed(0)
-              return `${sigla}\n${powerMW} MW`
+              const rate = (stateInfo.activePowerRate).toFixed(1)
+              return `${sigla}\n${powerMW} MW\n${rate} %`
             }
             return sigla
           }
