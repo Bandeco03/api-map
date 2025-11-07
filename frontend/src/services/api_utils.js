@@ -1,7 +1,5 @@
-import {ref} from "vue";
-
-class Api_utils {
-    async dataProcessMap(response) {
+class ApiUtils {
+    dataProcessMap(response) {
         const codeToStateName = {
             '12': 'Acre',
             '27': 'Alagoas',
@@ -31,18 +29,40 @@ class Api_utils {
             '17': 'Tocantins',
             '53': 'Distrito Federal'
         }
-        const stateData = ref([])
 
         if (response && response.result_code === '1' && response.result_data) {
-            stateData.value = response.result_data.map(item => {
-                const stateName = codeToStateName[item] || `Estado ${item.code}`
+            const processedData = response.result_data.map(item => {
+                const stateName = codeToStateName[item.code] || `Estado ${item.code}`
                 return {
                     name: stateName,
+                    value: item.state_realtime_power / 1000000, // Convert to MW for visualMap
                     activePower: item.state_realtime_power,
                     totalPower: item.state_installed_power
                 }
             })
-            console.log('Valores carregados com sucesso: ', stateData.value.length, ' estados processados.');
+            console.log('Valores carregados com sucesso: ', processedData.length, ' estados processados.');
+            return processedData
+        }
+
+        return []
+    }
+
+    dataProcessSum(response) {
+        if (response && response.result_code === '1' && response.result_data) {
+            let totalActivePower = 0
+            let totalInstalledPower = 0
+
+            response.result_data.forEach(item => {
+                totalActivePower += item.state_realtime_power
+                totalInstalledPower += item.state_installed_power
+            })
+
+            return {
+                totalActivePower,
+                totalInstalledPower
+            }
         }
     }
 }
+
+export default new ApiUtils();

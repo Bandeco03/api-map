@@ -1,9 +1,11 @@
 <script setup>
 import MapComponent from './components/MapComponent.vue'
 import FetchAPIButton from "@/components/FetchAPIButton.vue";
+import LoadingScreen from "@/components/LoadingScreen.vue";
 </script>
 
 <template>
+  <LoadingScreen />
   <main>
     <FetchAPIButton />
     <div>
@@ -21,15 +23,6 @@ main {
   height: 100vh;
   width: 100%;
   box-sizing: border-box;
-}
-
-button {
-  border: none;
-  border-radius: 15px;
-  font-size: 16px;
-  margin: 0 10px;
-  padding: 10px 20px;
-  cursor: pointer;
 }
 </style>
 

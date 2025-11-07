@@ -6,10 +6,8 @@ import {MapChart} from 'echarts/charts'
 import {TooltipComponent, VisualMapComponent} from 'echarts/components'
 import {CanvasRenderer} from 'echarts/renderers'
 import brazilGeoJson from '../brazil-states.json'
-import axios from 'axios'
+import apiUtils from '../services/api_utils.js'
 import emitter from "@/eventBus.js";
-
-const realTimePower = ref(true)
 
 const selectedStates = ref([])
 const totalActivePower = ref(0)
@@ -20,86 +18,22 @@ echarts.use([MapChart, TooltipComponent, VisualMapComponent, CanvasRenderer])
 
 echarts.registerMap('BRA', brazilGeoJson)
 
-// Mapeamento de código para nome do estado
-const codeToStateName = {
-  '12': 'Acre',
-  '27': 'Alagoas',
-  '16': 'Amapá',
-  '13': 'Amazonas',
-  '29': 'Bahia',
-  '23': 'Ceará',
-  '32': 'Espírito Santo',
-  '52': 'Goiás',
-  '21': 'Maranhão',
-  '51': 'Mato Grosso',
-  '50': 'Mato Grosso do Sul',
-  '31': 'Minas Gerais',
-  '15': 'Pará',
-  '25': 'Paraíba',
-  '41': 'Paraná',
-  '26': 'Pernambuco',
-  '22': 'Piauí',
-  '33': 'Rio de Janeiro',
-  '24': 'Rio Grande do Norte',
-  '43': 'Rio Grande do Sul',
-  '11': 'Rondônia',
-  '14': 'Roraima',
-  '42': 'Santa Catarina',
-  '35': 'São Paulo',
-  '28': 'Sergipe',
-  '17': 'Tocantins',
-  '53': 'Distrito Federal'
-}
-
 const stateData = ref([])
 
-async function fetchData() {
+async function fetchData(response) {
   totalActivePower.value = 0
   totalInstalledPower.value = 0
 
   try {
-    // Try to use the backend API first
-    let response
-    try {
-      response = await apiService.getPowerData()
-    } catch (backendError) {
-      console.warn('Backend API not available, falling back to direct API call:', backendError)
-      // Fallback to direct API call
-      const url = 'https://gateway.isolarcloud.com.hk/openapi/getPowerStationInfoPowerByCodeList'
-      const headers = {
-        'Content-Type': 'application/json',
-        'x-access-key': import.meta.env.VITE_FALLBACK_SUNGROW_ACCESS_KEY,
-        'sys_code': '901'
-      }
-      const data = {
-        token: import.meta.env.VITE_FALLBACK_SUNGROW_TOKEN,
-        appkey: import.meta.env.VITE_FALLBACK_SUNGROW_APPKEY
-      }
-      const axiosResponse = await axios.post(url, data, {headers})
-      response = axiosResponse.data
-    }
+    // Process the data using apiUtils
+    const processedData = apiUtils.dataProcessMap(response)
 
-    if (response && response.result_code === '1' && response.result_data) {
-      stateData.value = response.result_data.map(item => {
-        const stateName = codeToStateName[item.code] || `Estado ${item.code}`
-        totalActivePower.value += Number(item.state_realtime_power || 0) / 1000000000 // Converter para GW
-        totalInstalledPower.value += Number(item.state_installed_power || 0) / 1000000000 // Converter para GW
-        if (realTimePower.value) {
-          return {
-            name: stateName,
-            value: item.state_realtime_power, // valor usado para o visualMap
-            activePower: item.state_realtime_power,
-            totalPower: item.state_installed_power
-          }
-        } else {
-          return {
-            name: stateName,
-            value: item.state_installed_power, // valor usado para o visualMap
-            activePower: item.state_realtime_power,
-            totalPower: item.state_installed_power
-          }
-        }
-      })
+    if (processedData && processedData.length > 0) {
+      stateData.value = processedData
+
+      // Calculate totals
+      totalActivePower.value = stateData.value.reduce((sum, state) => sum + state.activePower, 0) / 1000000000 // Convert to GW
+      totalInstalledPower.value = stateData.value.reduce((sum, state) => sum + state.totalPower, 0) / 1000000000 // Convert to GW
 
       // Atualizar opções do mapa
       option.value.series[0].data = stateData.value
@@ -150,22 +84,46 @@ const option = ref({
     {
       type: 'map',
       map: 'BRA',
-      roam: false,
+      roam: 'scale',
+      scaleLimit: {min: 0.8, max: 10},
       layoutCenter: ['50%', '50%'],
       layoutSize: '100%',
       aspectScale: 0.95,
       data: stateData.value,
-      emphasis: {
-        itemStyle: {
-          areaColor: '#ffd700',
-          borderColor: '#ff8c00',
-          borderWidth: 2
+      label: {
+        show: true,
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#000000',
+        formatter: (params) => {
+          const geoData = brazilGeoJson.features.find(f => f.properties.name === params.name)
+          const stateInfo = stateData.value.find(s => s.name === params.name)
+
+          if (geoData) {
+            const sigla = geoData.properties.sigla
+            if (stateInfo) {
+              const powerMW = (stateInfo.activePower / 1000000).toFixed(0)
+              return `${sigla}\n${powerMW} MW`
+            }
+            return sigla
+          }
+          return params.name
         }
       },
-      select: {
+      emphasis: {
+        label: {
+          show: true,
+          fontSize: 16,
+          fontWeight: 'bold',
+          color: '#000000',
+          textBorderColor: '#ffffff',
+          textShadowColor: 'rgba(0, 0, 0, 0.3)',
+          textShadowBlur: 2,
+          textShadowOffsetX: 3,
+          textShadowOffsetY: 3,
+          textBorderWidth: 3
+        },
         itemStyle: {
-          areaColor: '#ff6b6b',
-          borderColor: '#c92a2a',
           borderWidth: 2
         }
       }
@@ -178,21 +136,9 @@ const handleMapClick = (params) => {
   if (params.componentType === 'series' && params.seriesType === 'map') {
     const stateName = params.name
     const stateInfo = stateData.value.find(s => s.name === stateName)
-
-    if (stateInfo) {
-      const index = selectedStates.value.findIndex(s => s.name === stateName)
-      if (index === -1) {
-        // Adicionar estado à lista
-        selectedStates.value.push(stateInfo)
-      } else {
-        // Remover estado da lista
-        selectedStates.value.splice(index, 1)
-      }
-      // Atualizar o mapa para refletir a seleção visual
-      updateMapSelection()
-    }
   }
 }
+
 
 // Função para remover estado da lista
 const removeState = (stateName) => {
@@ -241,7 +187,6 @@ onMounted(() => {
       {{ totalActivePower.toFixed(2) }} GW de potência total ativa |
       {{ totalInstalledPower.toFixed(2) }} GW de potência total instalada
     </header>
-
 
 
     <div class="content-wrapper">
