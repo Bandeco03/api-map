@@ -161,8 +161,6 @@ class ApiUtils {
         }
     }
 
-
-
     dataProcessSum(response) {
         if (response && response.result_code === '1' && response.result_data) {
             let totalActivePower = 0

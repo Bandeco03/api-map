@@ -28,9 +28,6 @@ onMounted(() => {
   fetchData()
 })
 
-// onMounted(() => {
-//   emitter.on('update-data', fetchData)
-// })
 </script>
 
 <template>
