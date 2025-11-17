@@ -18,8 +18,41 @@ const props = defineProps({
   height: {
     type: String,
     default: '400px'
+  },
+  yAxisMin: {
+    type: Number,
+    default: null
+  },
+  yAxisMax: {
+    type: Number,
+    default: null
+  },
+  yAxisInterval: {
+    type: Number,
+    default: null
   }
 })
+
+/**
+ * Apply Y-axis resolution settings to chart option
+ */
+const applyYAxisSettings = (chartOption) => {
+  if (!chartOption.yAxis) {
+    chartOption.yAxis = { type: 'value' }
+  }
+
+  if (props.yAxisMin !== null) {
+    chartOption.yAxis.min = props.yAxisMin
+  }
+  if (props.yAxisMax !== null) {
+    chartOption.yAxis.max = props.yAxisMax
+  }
+  if (props.yAxisInterval !== null) {
+    chartOption.yAxis.interval = props.yAxisInterval
+  }
+
+  return chartOption
+}
 
 /**
  * Load historical data from backend and render chart
@@ -35,9 +68,12 @@ const loadChartData = async () => {
     // Process data using api_utils
     const processedData = apiUtils.dataProcessHistoryForChart(response.data)
 
+    // Apply Y-axis resolution settings
+    const chartOption = applyYAxisSettings(processedData.chartOption)
+
     // Render chart with processed data
     if (chartInstance.value) {
-      chartInstance.value.setOption(processedData.chartOption)
+      chartInstance.value.setOption(chartOption)
     }
 
     console.log('Line chart data loaded successfully')
@@ -47,7 +83,9 @@ const loadChartData = async () => {
 
     // Show empty chart on error
     if (chartInstance.value) {
-      chartInstance.value.setOption(echartsHandler.createEmptyChartOption())
+      const emptyOption = echartsHandler.createEmptyChartOption()
+      const chartOption = applyYAxisSettings(emptyOption)
+      chartInstance.value.setOption(chartOption)
     }
   } finally {
     loading.value = false

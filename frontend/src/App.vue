@@ -13,7 +13,7 @@ import LineChart from "@/components/LineChart.vue";
       <MapComponent />
     </div>
     <div>
-      <LineChart />
+      <LineChart :height="'50rem'" :yAxisInterval="300" />
     </div>
   </main>
 </template>
