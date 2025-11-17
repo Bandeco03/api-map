@@ -14,6 +14,20 @@ a,
   padding: 3px;
 }
 
+button {
+    border: none;
+    border-radius: 1rem;
+    font-size: 1.2rem;
+    margin: 0 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+button:hover {
+  scale: 1.02;
+    transition: 0.1s;
+}
+
 @media (hover: hover) {
   a:hover {
     background-color: hsla(160, 100%, 37%, 0.2);

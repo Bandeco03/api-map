@@ -25,7 +25,10 @@ class ApiService {
       const response = await this.client.get('/api/power-data')
       // Adaptar o formato de resposta do banco de dados
       if (response.data && response.data.data) {
-        return JSON.parse(response.data.data)
+        // Check if data is already an object or needs to be parsed
+        return typeof response.data.data === 'string'
+          ? JSON.parse(response.data.data)
+          : response.data.data
       }
       return response.data
     } catch (error) {
