@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import asyncio
 from datetime import datetime
 from database import save_power_data, get_latest_power_data, get_all_power_data
+from config import settings
 
 load_dotenv()
 
@@ -84,7 +85,7 @@ app = FastAPI(title="API Map Backend", lifespan=lifespan)
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=settings.CORS_ORIGINS,  # Use settings from .env file
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -335,4 +336,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=settings.HOST, port=settings.PORT)

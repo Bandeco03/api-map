@@ -1,7 +1,11 @@
 import axios from 'axios'
 
 // Backend API base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// If VITE_API_URL is empty or not set, use empty string for relative URLs (works with Vite proxy)
+// If set to a full URL (e.g., http://localhost:8000), use that for direct connection
+const API_BASE_URL = import.meta.env.VITE_API_URL !== undefined
+  ? import.meta.env.VITE_API_URL
+  : 'http://localhost:8000'
 
 /**
  * API service for communicating with the backend
