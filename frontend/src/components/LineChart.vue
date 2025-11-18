@@ -1,9 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
 import apiService from '../services/api'
 import apiUtils from '../services/api_utils'
-import echartsHandler from '../services/echart_handler'
 
 const chartRef = ref(null)
 const loading = ref(true)
@@ -83,7 +82,6 @@ const loadChartData = async () => {
 
     // Show empty chart on error
     if (chartInstance.value) {
-      const emptyOption = echartsHandler.createEmptyChartOption()
       const chartOption = applyYAxisSettings(emptyOption)
       chartInstance.value.setOption(chartOption)
     }
@@ -124,8 +122,6 @@ onMounted(() => {
   loadChartData()
 })
 
-// Cleanup on unmount
-import { onBeforeUnmount } from 'vue'
 onBeforeUnmount(() => {
   destroyChart()
 })

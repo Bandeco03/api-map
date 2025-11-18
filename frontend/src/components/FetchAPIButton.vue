@@ -41,8 +41,8 @@ onMounted(() => {
 
 <style scoped>
 .update-btn {
-  color: hsla(160, 100%, 37%, 1);
-  background-color: hsla(160, 100%, 37%, 0.2);
+  color: hsl(28, 100%, 50%);
+  background-color: hsla(28, 100%, 50%, 0.2);
 }
 
 .controls {
