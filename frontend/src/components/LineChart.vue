@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import {ref, onMounted, onBeforeUnmount} from 'vue'
 import * as echarts from 'echarts'
 import apiService from '../services/api'
 import apiUtils from '../services/api_utils'
@@ -33,24 +33,79 @@ const props = defineProps({
 })
 
 /**
- * Apply Y-axis resolution settings to chart option
+ * Create ECharts option for line chart
+ * @param {Array} timestamps - Array of timestamp labels
+ * @param {Array} activePower - Array of active power values
+ * @returns {Object} ECharts option configuration
  */
-const applyYAxisSettings = (chartOption) => {
-  if (!chartOption.yAxis) {
-    chartOption.yAxis = { type: 'value' }
+const createLineChartOption = (timestamps, activePower) => {
+  const option = {
+    title: {
+      text: 'Histórico de Potência Ativa',
+      left: 'center',
+      textStyle: {
+        color: getComputedStyle(document.documentElement).getPropertyValue('--color-text').trim()
+      }
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: (params) => {
+        if (params && params.length > 0) {
+          const param = params[0]
+          return `${param.axisValue}<br/>Potência Ativa: ${param.value} MW`
+        }
+        return ''
+      }
+    },
+    xAxis: {
+      type: 'category',
+      data: timestamps,
+      axisLabel: {
+        rotate: 45,
+        interval: Math.floor(timestamps.length / 10) || 0
+      }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Potência (MW)',
+      axisLabel: {
+        formatter: '{value} MW'
+      }
+    },
+    series: [
+      {
+        name: 'Potência Ativa',
+        type: 'line',
+        data: activePower,
+        smooth: true,
+        itemStyle: {
+          color: '#ff7700'
+        },
+        areaStyle: {
+          color: 'rgba(255,119,0,0.2)'
+        }
+      }
+    ],
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '15%',
+      containLabel: true
+    }
   }
 
+  // Apply Y-axis resolution settings
   if (props.yAxisMin !== null) {
-    chartOption.yAxis.min = props.yAxisMin
+    option.yAxis.min = props.yAxisMin
   }
   if (props.yAxisMax !== null) {
-    chartOption.yAxis.max = props.yAxisMax
+    option.yAxis.max = props.yAxisMax
   }
   if (props.yAxisInterval !== null) {
-    chartOption.yAxis.interval = props.yAxisInterval
+    option.yAxis.interval = props.yAxisInterval
   }
 
-  return chartOption
+  return option
 }
 
 /**
@@ -64,11 +119,11 @@ const loadChartData = async () => {
     // Fetch historical data from backend
     const response = await apiService.getPowerDataHistory(props.limit)
 
-    // Process data using api_utils
-    const processedData = apiUtils.dataProcessHistoryForChart(response.data)
+    // Process data using api_utils (only data processing, no chart logic)
+    const processedData = apiUtils.dataProcessHistory(response.data)
 
-    // Apply Y-axis resolution settings
-    const chartOption = applyYAxisSettings(processedData.chartOption)
+    // Create chart option from processed data
+    const chartOption = createLineChartOption(processedData.timestamps, processedData.activePower)
 
     // Render chart with processed data
     if (chartInstance.value) {
@@ -82,8 +137,8 @@ const loadChartData = async () => {
 
     // Show empty chart on error
     if (chartInstance.value) {
-      const chartOption = applyYAxisSettings(emptyOption)
-      chartInstance.value.setOption(chartOption)
+      const emptyOption = createLineChartOption([], [])
+      chartInstance.value.setOption(emptyOption)
     }
   } finally {
     loading.value = false
@@ -145,9 +200,9 @@ defineExpose({
     </div>
 
     <div
-      ref="chartRef"
-      class="chart"
-      :style="{ height: props.height }"
+        ref="chartRef"
+        class="chart"
+        :style="{ height: props.height }"
     ></div>
   </div>
 </template>

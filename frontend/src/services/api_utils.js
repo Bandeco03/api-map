@@ -50,16 +50,15 @@ class ApiUtils {
     }
 
     /**
-     * Process historical power data for line chart visualization
+     * Process historical power data
      * @param {Array} historyData - Array of historical records from the database
-     * @returns {Object} Formatted data for ECharts line chart
+     * @returns {Object} Processed data with timestamps and power values
      */
-    dataProcessHistoryForChart(historyData) {
+    dataProcessHistory(historyData) {
         if (!historyData || !Array.isArray(historyData) || historyData.length === 0) {
             return {
                 timestamps: [],
-                activePower: [],
-                chartOption: this.createEmptyChartOption()
+                activePower: []
             }
         }
 
@@ -96,68 +95,7 @@ class ApiUtils {
 
         return {
             timestamps,
-            activePower: activePowerValues,
-            chartOption: this.createLineChartOption(timestamps, activePowerValues)
-        }
-    }
-
-    /**
-     * Create ECharts option for line chart
-     * @param {Array} timestamps - Array of timestamp labels
-     * @param {Array} activePower - Array of active power values
-     * @returns {Object} ECharts option configuration
-     */
-    createLineChartOption(timestamps, activePower) {
-        return {
-            title: {
-                text: 'Histórico de Potência Ativa',
-                left: 'center'
-            },
-            tooltip: {
-                trigger: 'axis',
-                formatter: (params) => {
-                    if (params && params.length > 0) {
-                        const param = params[0]
-                        return `${param.axisValue}<br/>Potência Ativa: ${param.value} MW`
-                    }
-                    return ''
-                }
-            },
-            xAxis: {
-                type: 'category',
-                data: timestamps,
-                axisLabel: {
-                    rotate: 45,
-                    interval: Math.floor(timestamps.length / 10) || 0
-                }
-            },
-            yAxis: {
-                type: 'value',
-                name: 'Potência (MW)',
-                axisLabel: {
-                    formatter: '{value} MW'
-                }
-            },
-            series: [
-                {
-                    name: 'Potência Ativa',
-                    type: 'line',
-                    data: activePower,
-                    smooth: true,
-                    itemStyle: {
-                        color: '#5470c6'
-                    },
-                    areaStyle: {
-                        color: 'rgba(84, 112, 198, 0.2)'
-                    }
-                }
-            ],
-            grid: {
-                left: '3%',
-                right: '4%',
-                bottom: '15%',
-                containLabel: true
-            }
+            activePower: activePowerValues
         }
     }
 
