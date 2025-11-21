@@ -15,14 +15,20 @@ export default defineConfig({
             '@': fileURLToPath(new URL('./src', import.meta.url))
         },
     },
-    server: {
-        host: '0.0.0.0', // Permite conexões de qualquer IP
-        port: 5173, // Porta padrão do Vite
-        strictPort: false, // Tenta outra porta se 5173 estiver ocupada
+    preview: {
+        host: '0.0.0.0', // Permite conexões de qualquer IP no preview
+        port: 4173, // Porta padrão do preview (pode mudar se quiser)
+        strictPort: false,
         allowedHosts: [
             '.ngrok-free.app',
             '.ngrok.io',
             'localhost',
         ],
+        proxy: {
+            '/api': {
+                target: 'http://localhost:8000',
+                changeOrigin: true,
+            }
+        }
     },
 })
