@@ -26,6 +26,7 @@ class bcolors:
 # Background task flag and token storage
 background_task_running = False
 current_token = None
+token_lock = asyncio.Lock()  # Lock for synchronizing token access
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,7 +42,10 @@ async def lifespan(app: FastAPI):
     print(f"\n{bcolors.OKBLUE}1. Obtaining initial token...{bcolors.ENDC}")
     await renew_token()
 
-    if current_token:
+    async with token_lock:
+        token_available = current_token is not None
+    
+    if token_available:
         print(f"{bcolors.OKGREEN}[SUCCESS] Initial token obtained successfully{bcolors.ENDC}")
     else:
         print(f"{bcolors.FAIL}[ERROR] Failed to obtain initial token{bcolors.ENDC}")
@@ -141,7 +145,8 @@ async def renew_token():
                         print(f"   Token found in: result_data (string)")
 
                 if token_found:
-                    current_token = token_found
+                    async with token_lock:
+                        current_token = token_found
                     print(f"{bcolors.OKGREEN}[SUCCESS] Token renewed successfully at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}{bcolors.ENDC}")
                     print(f"   Token: {current_token[:20]}... (truncated, length: {len(current_token)})")
                     return current_token
@@ -171,12 +176,19 @@ async def fetch_power_data_from_api() -> Dict[str, Any]:
     global current_token
 
     # If no token, get one first
-    if not current_token:
+    async with token_lock:
+        token_available = current_token is not None
+    
+    if not token_available:
         print(f"{bcolors.WARNING}[WARNING] No token available, attempting to renew...{bcolors.ENDC}")
         await renew_token()
 
     # Ensure we have a token before making the request
-    if not current_token:
+    async with token_lock:
+        token_available = current_token is not None
+        token_to_use = current_token
+    
+    if not token_available:
         error_msg = "Failed to obtain token - check credentials in .env file"
         print(f"{bcolors.FAIL}[ERROR] {error_msg}{bcolors.ENDC}")
         return {"error": error_msg, "result_code": "0"}
@@ -188,7 +200,7 @@ async def fetch_power_data_from_api() -> Dict[str, Any]:
         "sys_code": "901"
     }
     data = {
-        "token": current_token,  # Use the global token instead of env variable
+        "token": token_to_use,  # Use the global token instead of env variable
         "appkey": os.getenv("API_APPKEY"),
     }
 
@@ -204,11 +216,15 @@ async def fetch_power_data_from_api() -> Dict[str, Any]:
                 await renew_token()
 
                 # Ensure renewal was successful
-                if not current_token:
+                async with token_lock:
+                    token_available = current_token is not None
+                    token_to_use = current_token
+                
+                if not token_available:
                     return {"error": "Failed to renew token", "result_code": "0"}
 
                 # Retry with new token
-                data["token"] = current_token
+                data["token"] = token_to_use
                 response = await client.post(url, json=data, headers=headers)
                 response.raise_for_status()
                 response_data = response.json()
