@@ -8,21 +8,11 @@ from dotenv import load_dotenv
 import asyncio
 from datetime import datetime
 from database import save_power_data, get_latest_power_data, get_all_power_data
-from config import settings
+from config import settings, AnsiColor
 
 load_dotenv()
 
-
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+bcolors = AnsiColor
 
 
 # Background task flag and token storage
@@ -40,8 +30,17 @@ async def lifespan(app: FastAPI):
     print(f"{bcolors.HEADER}{bcolors.BOLD}Starting API Map Backend...{bcolors.ENDC}")
     print("=" * 60)
 
+    # Check credentials first
+    print(f"\n{bcolors.OKBLUE}1. Checking credentials...{bcolors.ENDC}")
+    if not await check_credentials():
+        print(f"{bcolors.FAIL}[CRITICAL ERROR] Cannot start backend without required credentials!{bcolors.ENDC}")
+        print(f"{bcolors.WARNING}Please check your .env file and ensure all required variables are set.{bcolors.ENDC}")
+        raise RuntimeError("Missing required environment variables. Backend cannot start.")
+
+    print(f"{bcolors.OKGREEN}[SUCCESS] All credentials are present{bcolors.ENDC}")
+
     # Get initial token
-    print(f"\n{bcolors.OKBLUE}1. Obtaining initial token...{bcolors.ENDC}")
+    print(f"\n{bcolors.OKBLUE}2. Obtaining initial token...{bcolors.ENDC}")
     await renew_token()
 
     if current_token:
@@ -51,11 +50,11 @@ async def lifespan(app: FastAPI):
         print(f"{bcolors.WARNING}[WARNING] API calls will fail until token is obtained!{bcolors.ENDC}")
 
     # Start background data collection
-    print(f"\n{bcolors.OKBLUE}2. Starting background data collection task...{bcolors.ENDC}")
+    print(f"\n{bcolors.OKBLUE}3. Starting background data collection task...{bcolors.ENDC}")
     data_task = asyncio.create_task(collect_data_periodically())
 
     # Start background token renewal (every 23h59min)
-    print(f"\n{bcolors.OKBLUE}3. Starting background token renewal task...{bcolors.ENDC}")
+    print(f"\n{bcolors.OKBLUE}4. Starting background token renewal task...{bcolors.ENDC}")
     token_task = asyncio.create_task(renew_token_periodically())
 
     print("\n" + "=" * 60)
@@ -96,6 +95,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+async def check_credentials() -> bool:
+    """Check if all required credentials are present in .env"""
+    required_vars = [
+        "API_ACCESS_KEY",
+        "API_APPKEY",
+        "USER_ACCOUNT",
+        "USER_PASSWORD"
+    ]
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+    if missing_vars:
+        print(f"{bcolors.FAIL}[ERROR] Missing required environment variables: {', '.join(missing_vars)}{bcolors.ENDC}")
+        return False
+    return True
 
 
 async def renew_token():
