@@ -12,6 +12,7 @@ from config import settings
 
 load_dotenv()
 
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -23,9 +24,11 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+
 # Background task flag and token storage
 background_task_running = False
 current_token = None
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -73,12 +76,15 @@ async def lifespan(app: FastAPI):
     try:
         await data_task
     except asyncio.CancelledError:
+        # Task was cancelled during shutdown; this is expected and can be safely ignored.
         pass
 
     try:
         await token_task
     except asyncio.CancelledError:
+        # Task was cancelled during shutdown; this is expected and can be safely ignored.
         pass
+
 
 app = FastAPI(title="API Map Backend", lifespan=lifespan)
 
@@ -99,14 +105,22 @@ async def renew_token():
     url = "https://gateway.isolarcloud.com.hk/openapi/login"
     headers = {
         "Content-Type": "application/json",
-        "x-access-key": os.getenv("API_ACCESS_KEY"),
+        "x-access-key": os.getenv("API_ACCESS_KEY", None),
         "sys_code": "901"
     }
     data = {
-        "appkey": os.getenv("API_APPKEY"),
-        "user_account": os.getenv("USER_ACCOUNT"),
-        "user_password": os.getenv("USER_PASSWORD"),
+        "appkey": os.getenv("API_APPKEY", None),
+        "user_account": os.getenv("USER_ACCOUNT", None),
+        "user_password": os.getenv("USER_PASSWORD", None),
     }
+
+    if (not headers.get("x-access-key") or
+            not data.get("appkey") or
+            not data.get("user_account") or
+            not data.get("user_password")
+    ):
+        print(f"{bcolors.FAIL}[ERROR] Missing credentials in .env file for token renewal{bcolors.ENDC}")
+        return None
 
     print(f"{bcolors.OKCYAN}-> Attempting to renew token...{bcolors.ENDC}")
 
@@ -142,7 +156,8 @@ async def renew_token():
 
                 if token_found:
                     current_token = token_found
-                    print(f"{bcolors.OKGREEN}[SUCCESS] Token renewed successfully at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}{bcolors.ENDC}")
+                    print(
+                        f"{bcolors.OKGREEN}[SUCCESS] Token renewed successfully at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}{bcolors.ENDC}")
                     print(f"   Token: {current_token[:20]}... (truncated, length: {len(current_token)})")
                     return current_token
                 else:
@@ -151,7 +166,8 @@ async def renew_token():
                     print(f"   Full response: {response_data}")
                     return None
             else:
-                print(f"{bcolors.FAIL}[ERROR] Token renewal failed: {response_data.get('result_msg', 'Unknown error')}{bcolors.ENDC}")
+                print(
+                    f"{bcolors.FAIL}[ERROR] Token renewal failed: {response_data.get('result_msg', 'Unknown error')}{bcolors.ENDC}")
                 print(f"   Full response: {response_data}")
                 return None
         except httpx.HTTPError as e:
@@ -162,6 +178,7 @@ async def renew_token():
             import traceback
             traceback.print_exc()
             return None
+
 
 async def fetch_power_data_from_api() -> Dict[str, Any]:
     """
@@ -199,7 +216,8 @@ async def fetch_power_data_from_api() -> Dict[str, Any]:
             response_data = response.json()
 
             # Check if token is invalid and renew if needed
-            if response_data.get("result_code") == "E00003" or response_data.get("result_msg") == "er_token_login_invalid":
+            if response_data.get("result_code") == "E00003" or response_data.get(
+                    "result_msg") == "er_token_login_invalid":
                 print(f"{bcolors.WARNING}[WARNING] Token invalid, renewing...{bcolors.ENDC}")
                 await renew_token()
 
@@ -233,7 +251,8 @@ async def collect_data_periodically():
 
     while background_task_running:
         try:
-            print(f"{bcolors.OKCYAN}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] -> Fetching power data from API...{bcolors.ENDC}")
+            print(
+                f"{bcolors.OKCYAN}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] -> Fetching power data from API...{bcolors.ENDC}")
             data = await fetch_power_data_from_api()
 
             # Save to database
@@ -260,9 +279,9 @@ async def renew_token_periodically():
         await asyncio.sleep(86340)
 
         if background_task_running:
-            print(f"{bcolors.OKCYAN}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] -> Scheduled token renewal...{bcolors.ENDC}")
+            print(
+                f"{bcolors.OKCYAN}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] -> Scheduled token renewal...{bcolors.ENDC}")
             await renew_token()
-
 
 
 @app.get("/")
@@ -336,4 +355,5 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host=settings.HOST, port=settings.PORT)
