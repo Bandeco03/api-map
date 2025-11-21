@@ -147,10 +147,9 @@ async def renew_token():
                 if token_found:
                     async with token_lock:
                         current_token = token_found
-                        token_to_return = current_token
                     print(f"{bcolors.OKGREEN}[SUCCESS] Token renewed successfully at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}{bcolors.ENDC}")
-                    print(f"   Token: {token_to_return[:20]}... (truncated, length: {len(token_to_return)})")
-                    return token_to_return
+                    print(f"   Token: {token_found[:20]}... (truncated, length: {len(token_found)})")
+                    return token_found
                 else:
                     print(f"{bcolors.FAIL}[ERROR] Token renewal failed: Token is empty in response{bcolors.ENDC}")
                     print(f"   Full response keys: {list(response_data.keys())}")
