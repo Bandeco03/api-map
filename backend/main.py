@@ -147,9 +147,10 @@ async def renew_token():
                 if token_found:
                     async with token_lock:
                         current_token = token_found
+                        token_to_return = current_token
                     print(f"{bcolors.OKGREEN}[SUCCESS] Token renewed successfully at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}{bcolors.ENDC}")
-                    print(f"   Token: {current_token[:20]}... (truncated, length: {len(current_token)})")
-                    return current_token
+                    print(f"   Token: {token_to_return[:20]}... (truncated, length: {len(token_to_return)})")
+                    return token_to_return
                 else:
                     print(f"{bcolors.FAIL}[ERROR] Token renewal failed: Token is empty in response{bcolors.ENDC}")
                     print(f"   Full response keys: {list(response_data.keys())}")
@@ -185,8 +186,12 @@ async def fetch_power_data_from_api() -> Dict[str, Any]:
 
     # Ensure we have a token before making the request
     async with token_lock:
-        token_available = current_token is not None
-        token_to_use = current_token
+        if current_token is not None:
+            token_available = True
+            token_to_use = current_token
+        else:
+            token_available = False
+            token_to_use = None
     
     if not token_available:
         error_msg = "Failed to obtain token - check credentials in .env file"
@@ -217,8 +222,12 @@ async def fetch_power_data_from_api() -> Dict[str, Any]:
 
                 # Ensure renewal was successful
                 async with token_lock:
-                    token_available = current_token is not None
-                    token_to_use = current_token
+                    if current_token is not None:
+                        token_available = True
+                        token_to_use = current_token
+                    else:
+                        token_available = False
+                        token_to_use = None
                 
                 if not token_available:
                     return {"error": "Failed to renew token", "result_code": "0"}
