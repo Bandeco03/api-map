@@ -3,22 +3,22 @@ import {onMounted, ref} from 'vue'
 import apiService from '../services/api.js'
 import emitter from "@/eventBus.js";
 
-const loading = ref(false)
-
 async function fetchData() {
   emitter.emit('loading-start')
   let data = null
+  let historical = null
 
   try {
     data = await apiService.getPowerData()
+    historical = await apiService.getPowerDataHistory()
     console.log('Dados buscados com sucesso:', data)
   } catch (error) {
     console.error('Erro ao buscar dados:', error)
   } finally {
     if (data) {
       emitter.emit('api-data', data)
+      emitter.emit('api-history', historical)
     }
-    loading.value = false
   }
 
   emitter.emit('loading-stop')
@@ -49,5 +49,15 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-self: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+@media (min-width: 768px) {
+  .controls {
+    margin-bottom: 20px;
+  }
 }
 </style>

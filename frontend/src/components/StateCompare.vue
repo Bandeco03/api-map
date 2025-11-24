@@ -80,6 +80,8 @@ onMounted(() => {
 <style scoped>
 h3 {
   color: var(--color-heading);
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  margin: 0;
 }
 
 .comparison-panel {
@@ -88,8 +90,8 @@ h3 {
   background-color: var(--color-background-mute);
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  max-height: 600px;
+  padding: 15px;
+  max-height: 400px;
   overflow-y: auto;
 }
 
@@ -97,7 +99,8 @@ h3 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  gap: 10px;
 }
 
 .clear-btn {
@@ -107,12 +110,15 @@ h3 {
   border-radius: 15px;
   padding: 5px 10px;
   cursor: pointer;
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  white-space: nowrap;
 }
 
 .empty-state {
   text-align: center;
   color: var(--color-text);
   padding: 20px;
+  font-size: clamp(0.875rem, 2vw, 1rem);
 }
 
 .states-list {
@@ -136,6 +142,7 @@ h3 {
 .state-header h4 {
   margin: 0;
   color: var(--color-text);
+  font-size: clamp(0.9rem, 2.5vw, 1.1rem);
 }
 
 .remove-btn {
@@ -161,6 +168,8 @@ h3 {
   display: flex;
   justify-content: space-between;
   margin: 5px 0;
+  gap: 10px;
+  font-size: clamp(0.8rem, 2vw, 0.95rem);
 }
 
 .label {
@@ -171,5 +180,21 @@ h3 {
 .value {
   font-weight: 600;
   color: var(--color-text-highlight);
+  text-align: right;
+}
+
+/* Tablet e Desktop */
+@media (min-width: 768px) {
+  .comparison-panel {
+    padding: 20px;
+    max-height: 500px;
+  }
+}
+
+/* Desktop maior */
+@media (min-width: 1024px) {
+  .comparison-panel {
+    max-height: 600px;
+  }
 }
 </style>

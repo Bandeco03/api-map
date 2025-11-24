@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import json
 
 Base = declarative_base()
@@ -11,7 +11,7 @@ class PowerDataRecord(Base):
     __tablename__ = "power_data_records"
 
     id = Column(Integer, primary_key=True, index=True)
-    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone(timedelta(hours=-3))), index=True)
     raw_data = Column(Text)  # Store full JSON response
     result_code = Column(String)
     result_msg = Column(String, nullable=True)
@@ -71,7 +71,7 @@ def get_latest_power_data():
         db.close()
 
 
-def get_all_power_data(limit: int = 100):
+def get_all_power_data(limit: int = 576): # 576 records = 48 hours
     """Get all power data records with optional limit"""
     db = SessionLocal()
     try:
