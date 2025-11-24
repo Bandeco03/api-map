@@ -11,7 +11,7 @@ async function fetchData() {
   try {
     data = await apiService.getPowerData()
     historical = await apiService.getPowerDataHistory()
-    console.log('Dados buscados com sucesso:', data)
+    console.log('Dados buscados com sucesso'/* , data*/)
   } catch (error) {
     console.error('Erro ao buscar dados:', error)
   } finally {

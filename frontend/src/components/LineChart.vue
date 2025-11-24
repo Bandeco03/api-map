@@ -132,7 +132,7 @@ const loadChartData = async (historical) => {
       option.value.yAxis.interval = props.yAxisInterval
     }
 
-    console.log('Line chart data loaded successfully')
+    // console.log('Line chart data loaded successfully')
   } catch (err) {
     console.error('Error loading chart data:', err)
     error.value = 'Erro ao carregar dados do gráfico'

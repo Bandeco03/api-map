@@ -39,7 +39,7 @@ async function fetchData(response) {
       option.value.visualMap.min = Math.min(...powers)
       option.value.visualMap.max = Math.max(...powers)
 
-      console.log('Dados carregados com sucesso:', stateData.value.length, 'estados')
+      // console.log('Dados carregados com sucesso:', stateData.value.length, 'estados')
     } else {
       console.error('Dados da API inválidos', response)
     }
