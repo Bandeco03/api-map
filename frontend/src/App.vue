@@ -54,7 +54,6 @@ div {
   min-width: 0;
 }
 
-/* Desktop: layout lado a lado */
 @media (min-width: 768px) {
   .map-info-container {
     flex-direction: row;

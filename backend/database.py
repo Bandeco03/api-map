@@ -71,7 +71,7 @@ def get_latest_power_data():
         db.close()
 
 
-def get_all_power_data(limit: int = 576): # 576 records = 48 hours
+def get_all_power_data(limit: int = 576): # 576 records = 48 hours (5 min intervals)
     """Get all power data records with optional limit"""
     db = SessionLocal()
     try:

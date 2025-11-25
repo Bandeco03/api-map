@@ -1,5 +1,5 @@
 <script setup>
-import {ref, onMounted} from 'vue'
+import {ref, onMounted, onBeforeUnmount} from 'vue'
 import VChart from 'vue-echarts'
 import * as echarts from 'echarts/core'
 import {LineChart} from 'echarts/charts'
@@ -9,7 +9,6 @@ import {
   TitleComponent
 } from 'echarts/components'
 import {CanvasRenderer} from 'echarts/renderers'
-import apiService from '../services/api'
 import apiUtils from '../services/api_utils'
 import emitter from "@/eventBus.js";
 
@@ -27,10 +26,6 @@ const loading = ref(true)
 const error = ref(null)
 
 const props = defineProps({
-  limit: {
-    type: Number,
-    default: 100
-  },
   height: {
     type: String,
     default: '400px'
@@ -151,10 +146,8 @@ onMounted(() => {
   })
 })
 
-
-// Expose refresh method
-defineExpose({
-  refresh: loadChartData
+onBeforeUnmount(() => {
+  emitter.off('api-history', loadChartData)
 })
 </script>
 
@@ -167,7 +160,6 @@ defineExpose({
 
     <div v-else-if="error" class="error-message">
       <p>{{ error }}</p>
-      <button @click="loadChartData" class="retry-button">Tentar Novamente</button>
     </div>
 
     <v-chart

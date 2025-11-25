@@ -183,7 +183,6 @@ h3 {
   text-align: right;
 }
 
-/* Tablet e Desktop */
 @media (min-width: 768px) {
   .comparison-panel {
     padding: 20px;
@@ -191,7 +190,7 @@ h3 {
   }
 }
 
-/* Desktop maior */
+/* Larger Desktop */
 @media (min-width: 1024px) {
   .comparison-panel {
     max-height: 600px;

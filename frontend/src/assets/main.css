@@ -36,7 +36,7 @@ button:hover {
   }
 }
 
-/* Tablet e Desktop */
+/* Tablet and Desktop */
 @media (min-width: 768px) {
   #app {
     padding: 1rem;
@@ -48,7 +48,7 @@ button:hover {
   }
 }
 
-/* Desktop maior */
+/* Larger Desktop */
 @media (min-width: 1024px) {
   #app {
     padding: 2rem;

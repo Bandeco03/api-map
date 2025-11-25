@@ -17,6 +17,8 @@ async function fetchData() {
   } finally {
     if (data) {
       emitter.emit('api-data', data)
+    }
+    if (historical) {
       emitter.emit('api-history', historical)
     }
   }
