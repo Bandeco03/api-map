@@ -147,7 +147,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  emitter.off('api-history', loadChartData)
+  emitter.off('api-history')
 })
 </script>
 
