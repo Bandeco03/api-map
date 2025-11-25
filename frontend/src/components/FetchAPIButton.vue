@@ -21,9 +21,8 @@ async function fetchData() {
     if (historical) {
       emitter.emit('api-history', historical)
     }
+    emitter.emit('loading-stop')
   }
-
-  emitter.emit('loading-stop')
 }
 
 onMounted(() => {

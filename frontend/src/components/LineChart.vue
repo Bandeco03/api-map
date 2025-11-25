@@ -140,14 +140,16 @@ const loadChartData = async (historical) => {
   }
 }
 
+const handleHistoryData = (historical) => {
+  loadChartData(historical)
+}
+
 onMounted(() => {
-  emitter.on('api-history', (historical) => {
-    loadChartData(historical)
-  })
+  emitter.on('api-history', handleHistoryData)
 })
 
 onBeforeUnmount(() => {
-  emitter.off('api-history')
+  emitter.off('api-history', handleHistoryData)
 })
 </script>
 
@@ -209,21 +211,6 @@ onBeforeUnmount(() => {
 .error-message p {
   margin-bottom: 1rem;
   font-size: clamp(0.9rem, 2.5vw, 1.1rem);
-}
-
-.retry-button {
-  padding: 0.5rem 1rem;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: clamp(0.875rem, 2vw, 1rem);
-  transition: background-color 0.3s;
-}
-
-.retry-button:hover {
-  background-color: #2980b9;
 }
 
 /* Tablet */
