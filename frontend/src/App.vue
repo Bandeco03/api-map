@@ -24,11 +24,11 @@ import InfoViewer from "@/components/InfoViewer.vue";
 
 <style>
 main {
-  padding: 2rem;
+  padding: clamp(0.5rem, 2vw, 2rem);
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
 }
@@ -41,16 +41,31 @@ div {
 
 .map-info-container {
   display: flex;
+  flex-direction: column;
   gap: 20px;
+  width: 100%;
 }
 
 .map-info-container > :first-child {
-  flex: 2;
   min-width: 0;
 }
 
 .map-info-container > :last-child {
-  flex: 1;
-  min-width: 300px;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .map-info-container {
+    flex-direction: row;
+  }
+
+  .map-info-container > :first-child {
+    flex: 2;
+  }
+
+  .map-info-container > :last-child {
+    flex: 1;
+    min-width: 300px;
+  }
 }
 </style>

@@ -42,7 +42,7 @@ class ApiUtils {
                     activePowerRate: (item.state_realtime_power / totals.totalActivePower) * 100
                 }
             })
-            console.log('Valores carregados com sucesso: ', processedData.length, ' estados processados.');
+            // console.log('Valores carregados com sucesso: ', processedData.length, ' estados processados.');
             return processedData
         }
 

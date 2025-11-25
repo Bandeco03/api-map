@@ -39,7 +39,7 @@ async function fetchData(response) {
       option.value.visualMap.min = Math.min(...powers)
       option.value.visualMap.max = Math.max(...powers)
 
-      console.log('Dados carregados com sucesso:', stateData.value.length, 'estados')
+      // console.log('Dados carregados com sucesso:', stateData.value.length, 'estados')
     } else {
       console.error('Dados da API inválidos', response)
     }
@@ -190,7 +190,7 @@ onMounted(() => {
         <v-chart
             :option="option"
             autoresize
-            style="height: 600px; width: 100%;"
+            class="map-chart"
             @click="handleMapClick"
         />
       </div>
@@ -224,7 +224,7 @@ button {
   flex: 1;
   justify-content: center;
   align-items: flex-start;
-  padding: 20px;
+  padding: 10px;
   overflow: hidden;
 }
 
@@ -232,5 +232,32 @@ button {
   flex: 1;
   position: relative;
   width: 100%;
+}
+
+.map-chart {
+  height: 400px;
+  width: 100%;
+}
+
+/* Tablet */
+@media (min-width: 768px) {
+  .content-wrapper {
+    padding: 15px;
+  }
+
+  .map-chart {
+    height: 500px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .content-wrapper {
+    padding: 20px;
+  }
+
+  .map-chart {
+    height: 600px;
+  }
 }
 </style>

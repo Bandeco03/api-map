@@ -1,19 +1,31 @@
 <script setup>
 import {ref, onMounted, onBeforeUnmount} from 'vue'
-import * as echarts from 'echarts'
-import apiService from '../services/api'
+import VChart from 'vue-echarts'
+import * as echarts from 'echarts/core'
+import {LineChart} from 'echarts/charts'
+import {
+  GridComponent,
+  TooltipComponent,
+  TitleComponent
+} from 'echarts/components'
+import {CanvasRenderer} from 'echarts/renderers'
 import apiUtils from '../services/api_utils'
+import emitter from "@/eventBus.js";
+
+// Register required ECharts components
+echarts.use([
+  LineChart,
+  GridComponent,
+  TooltipComponent,
+  TitleComponent,
+  CanvasRenderer
+])
 
 const chartRef = ref(null)
 const loading = ref(true)
 const error = ref(null)
-const chartInstance = ref(null)
 
 const props = defineProps({
-  limit: {
-    type: Number,
-    default: 100
-  },
   height: {
     type: String,
     default: '400px'
@@ -32,158 +44,112 @@ const props = defineProps({
   }
 })
 
-/**
- * Create ECharts option for line chart
- * @param {Array} timestamps - Array of timestamp labels
- * @param {Array} activePower - Array of active power values
- * @returns {Object} ECharts option configuration
- */
-const createLineChartOption = (timestamps, activePower) => {
-  const option = {
-    title: {
-      text: 'Histórico de Potência Ativa',
-      left: 'center',
-      textStyle: {
-        color: getComputedStyle(document.documentElement).getPropertyValue('--color-text').trim()
-      }
-    },
-    tooltip: {
-      trigger: 'axis',
-      formatter: (params) => {
-        if (params && params.length > 0) {
-          const param = params[0]
-          return `${param.axisValue}<br/>Potência Ativa: ${param.value} MW`
-        }
-        return ''
-      }
-    },
-    xAxis: {
-      type: 'category',
-      data: timestamps,
-      axisLabel: {
-        rotate: 45,
-        interval: Math.floor(timestamps.length / 10) || 0
-      }
-    },
-    yAxis: {
-      type: 'value',
-      name: 'Potência (MW)',
-      axisLabel: {
-        formatter: '{value} MW'
-      }
-    },
-    series: [
-      {
-        name: 'Potência Ativa',
-        type: 'line',
-        data: activePower,
-        smooth: true,
-        itemStyle: {
-          color: '#ff7700'
-        },
-        areaStyle: {
-          color: 'rgba(255,119,0,0.2)'
-        }
-      }
-    ],
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '15%',
-      containLabel: true
+// Chart option as reactive ref
+const option = ref({
+  title: {
+    text: 'Histórico de Potência Ativa',
+    left: 'center',
+    textStyle: {
+      color: getComputedStyle(document.documentElement).getPropertyValue('--color-text').trim()
     }
+  },
+  tooltip: {
+    trigger: 'axis',
+    formatter: (params) => {
+      if (params && params.length > 0) {
+        const param = params[0]
+        return `${param.axisValue}<br/>Potência Ativa: ${param.value} MW`
+      }
+      return ''
+    }
+  },
+  xAxis: {
+    type: 'category',
+    data: [],
+    axisLabel: {
+      rotate: 45,
+      interval: 0
+    }
+  },
+  yAxis: {
+    type: 'value',
+    name: 'Potência (MW)',
+    axisLabel: {
+      formatter: '{value} MW'
+    }
+  },
+  series: [
+    {
+      name: 'Potência Ativa',
+      type: 'line',
+      data: [],
+      smooth: true,
+      itemStyle: {
+        color: '#ff7700'
+      },
+      areaStyle: {
+        color: 'rgba(255,119,0,0.2)'
+      }
+    }
+  ],
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '15%',
+    containLabel: true
   }
-
-  // Apply Y-axis resolution settings
-  if (props.yAxisMin !== null) {
-    option.yAxis.min = props.yAxisMin
-  }
-  if (props.yAxisMax !== null) {
-    option.yAxis.max = props.yAxisMax
-  }
-  if (props.yAxisInterval !== null) {
-    option.yAxis.interval = props.yAxisInterval
-  }
-
-  return option
-}
+})
 
 /**
  * Load historical data from backend and render chart
  */
-const loadChartData = async () => {
+const loadChartData = async (historical) => {
   try {
     loading.value = true
     error.value = null
 
-    // Fetch historical data from backend
-    const response = await apiService.getPowerDataHistory(props.limit)
-
     // Process data using api_utils (only data processing, no chart logic)
-    const processedData = apiUtils.dataProcessHistory(response.data)
+    const processedData = apiUtils.dataProcessHistory(historical.data)
 
-    // Create chart option from processed data
-    const chartOption = createLineChartOption(processedData.timestamps, processedData.activePower)
+    // Update chart option with processed data
+    option.value.xAxis.data = processedData.timestamps
+    option.value.xAxis.axisLabel.interval = Math.floor(processedData.timestamps.length / 10) || 0
+    option.value.series[0].data = processedData.activePower
 
-    // Render chart with processed data
-    if (chartInstance.value) {
-      chartInstance.value.setOption(chartOption)
+    // Apply Y-axis resolution settings
+    if (props.yAxisMin !== null) {
+      option.value.yAxis.min = props.yAxisMin
+    }
+    if (props.yAxisMax !== null) {
+      option.value.yAxis.max = props.yAxisMax
+    }
+    if (props.yAxisInterval !== null) {
+      option.value.yAxis.interval = props.yAxisInterval
     }
 
-    console.log('Line chart data loaded successfully')
+    // console.log('Line chart data loaded successfully')
   } catch (err) {
     console.error('Error loading chart data:', err)
     error.value = 'Erro ao carregar dados do gráfico'
 
     // Show empty chart on error
-    if (chartInstance.value) {
-      const emptyOption = createLineChartOption([], [])
-      chartInstance.value.setOption(emptyOption)
-    }
+    option.value.xAxis.data = []
+    option.value.series[0].data = []
   } finally {
     loading.value = false
   }
 }
 
-/**
- * Initialize ECharts instance
- */
-const initChart = () => {
-  if (chartRef.value && !chartInstance.value) {
-    chartInstance.value = echarts.init(chartRef.value)
-
-    // Handle window resize
-    window.addEventListener('resize', () => {
-      chartInstance.value?.resize()
-    })
-  }
-}
-
-/**
- * Cleanup chart instance
- */
-const destroyChart = () => {
-  if (chartInstance.value) {
-    chartInstance.value.dispose()
-    chartInstance.value = null
-  }
-  window.removeEventListener('resize', () => {
-    chartInstance.value?.resize()
-  })
+const handleHistoryData = (historical) => {
+  loadChartData(historical)
 }
 
 onMounted(() => {
-  initChart()
-  loadChartData()
+  emitter.on('api-history', handleHistoryData)
 })
 
 onBeforeUnmount(() => {
-  destroyChart()
-})
-
-// Expose refresh method
-defineExpose({
-  refresh: loadChartData
+  emitter.off('api-history', handleHistoryData)
 })
 </script>
 
@@ -196,14 +162,14 @@ defineExpose({
 
     <div v-else-if="error" class="error-message">
       <p>{{ error }}</p>
-      <button @click="loadChartData" class="retry-button">Tentar Novamente</button>
     </div>
 
-    <div
+    <v-chart
         ref="chartRef"
         class="chart"
-        :style="{ height: props.height }"
-    ></div>
+        :option="option"
+        autoresize
+    />
   </div>
 </template>
 
@@ -215,6 +181,8 @@ defineExpose({
 
 .chart {
   width: 100%;
+  height: 300px;
+  min-height: 300px;
 }
 
 .loading-overlay {
@@ -222,8 +190,12 @@ defineExpose({
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  min-height: 400px;
+  padding: 1rem;
+  min-height: 300px;
+}
+
+.loading-overlay p {
+  font-size: clamp(0.875rem, 2vw, 1rem);
 }
 
 .error-message {
@@ -231,28 +203,41 @@ defineExpose({
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  min-height: 400px;
+  padding: 1rem;
+  min-height: 300px;
   color: #e74c3c;
 }
 
 .error-message p {
   margin-bottom: 1rem;
-  font-size: 1.1rem;
+  font-size: clamp(0.9rem, 2.5vw, 1.1rem);
 }
 
-.retry-button {
-  padding: 0.5rem 1rem;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.3s;
+/* Tablet */
+@media (min-width: 768px) {
+  .chart {
+    height: 400px;
+    min-height: 400px;
+  }
+
+  .loading-overlay,
+  .error-message {
+    padding: 1.5rem;
+    min-height: 400px;
+  }
 }
 
-.retry-button:hover {
-  background-color: #2980b9;
+/* Desktop */
+@media (min-width: 1024px) {
+  .chart {
+    height: 500px;
+    min-height: 500px;
+  }
+
+  .loading-overlay,
+  .error-message {
+    padding: 2rem;
+    min-height: 500px;
+  }
 }
 </style>
