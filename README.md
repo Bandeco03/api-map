@@ -430,7 +430,7 @@ This project is under the MIT license. See the [LICENSE](LICENSE) file for more 
 **Rafael Bandini Silva**
 
 - GitHub: [@Bandeco03](https://github.com/Bandeco03)
-- LinkedIn: [Rafael Bandini Silva](https://www.linkedin.com/in/rafael-bandini-silva/)
+- LinkedIn: [Rafael Bandini Silva](https://www.linkedin.com/in/rafael-bandini/)
 
 ## Support
 
