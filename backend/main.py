@@ -321,10 +321,10 @@ async def get_power_data() -> Dict[str, Any]:
 
 
 @app.get("/api/power-data/history")
-async def get_power_data_history(limit: int = 100) -> Dict[str, Any]:
+async def get_power_data_history(limit: int = 576) -> Dict[str, Any]:
     """
     Get historical power station data from the database
-    Query parameter 'limit' controls how many records to return (default: 100)
+    Query parameter 'limit' controls how many records to return (default: 576)
     """
     history = get_all_power_data(limit=limit)
 

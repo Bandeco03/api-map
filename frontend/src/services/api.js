@@ -46,7 +46,7 @@ class ApiService {
    * @param {number} limit - Number of records to fetch
    * @returns {Promise} Historical power data
    */
-  async getPowerDataHistory(limit = 100) {
+  async getPowerDataHistory(limit = 576) {
     try {
       const response = await this.client.get(`/api/power-data/history?limit=${limit}`)
       return response.data
