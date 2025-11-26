@@ -3,8 +3,9 @@ import MapComponent from './components/MapComponent.vue'
 import FetchAPIButton from "@/components/FetchAPIButton.vue";
 import LoadingScreen from "@/components/LoadingScreen.vue";
 import LineChart from "@/components/LineChart.vue";
-import StateCompare from "@/components/StateCompare.vue";
+// import StateCompare from "@/components/StateCompare.vue";
 import InfoViewer from "@/components/InfoViewer.vue";
+import StateTable from "@/components/StateTable.vue";
 </script>
 
 <template>
@@ -14,7 +15,8 @@ import InfoViewer from "@/components/InfoViewer.vue";
     <FetchAPIButton />
     <div class="map-info-container">
       <MapComponent />
-      <StateCompare />
+<!--      <StateCompare />-->
+      <StateTable />
     </div>
     <div>
       <LineChart :height="'50rem'" :yAxisInterval="300" />

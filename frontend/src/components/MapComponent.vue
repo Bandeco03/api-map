@@ -176,9 +176,9 @@ onMounted(() => {
   })
 
   // Ouvir mudanças na seleção de estados
-  emitter.on('state-selection-changed', (selectedStates) => {
-    updateMapSelection(selectedStates)
-  })
+  // emitter.on('state-selection-changed', (selectedStates) => {
+  //   updateMapSelection(selectedStates)
+  // })
 })
 </script>
 

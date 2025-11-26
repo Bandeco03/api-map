@@ -2,17 +2,18 @@
 import {onMounted, ref} from "vue";
 import apiUtils from '../services/api_utils.js'
 import emitter from "@/eventBus.js"
+import powerDataManagement from '@/services/utils.js'
 import energyImg from '../assets/energy.png'
 
 let totalActivePower = ref(0)
 let totalInstalledPower = ref(0)
-let isOpen = ref(false) // Estado do menu (aberto/fechado)
+let isOpen = ref(false) // Menu boolean state (visible/hidden)
 
 async function updateTotals(data) {
   const totals = apiUtils.dataProcessSum(data)
   if (totals) {
-    totalActivePower.value = totals.totalActivePower / 1000000000 // Convert to GW
-    totalInstalledPower.value = totals.totalInstalledPower / 1000000000 // Convert to GW
+    totalActivePower.value = powerDataManagement.formatPower(totals.totalActivePower)
+    totalInstalledPower.value = powerDataManagement.formatPower(totals.totalInstalledPower)
   }
 }
 
@@ -30,9 +31,9 @@ onMounted(() => {
 <template>
   <div class="total-sum" :class="{ 'closed': !isOpen }" :aria-expanded="isOpen">
     <div class="content" v-show="isOpen">
-      <span class="power-value">{{ totalActivePower.toFixed(2) }} GW</span> de potência total ativa
+      <span class="power-value">{{ totalActivePower }}</span> de potência total ativa
       <br>
-      <span class="power-value">{{ totalInstalledPower.toFixed(2) }} GW</span> de potência total instalada
+      <span class="power-value">{{ totalInstalledPower }}</span> de potência total instalada
     </div>
     <button @click="toggleMenu" class="toggle-btn" :aria-label="isOpen ? 'Ocultar painel' : 'Mostrar painel'">
       <img :src="energyImg" alt="" class="icon"/>
