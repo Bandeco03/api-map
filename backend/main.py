@@ -1,3 +1,4 @@
+from typing import Dict, Any, Optional
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -13,7 +14,6 @@ from config import settings, AnsiColor
 load_dotenv()
 
 bcolors = AnsiColor
-
 
 # Background task flag and token storage
 background_task_running = False
@@ -95,6 +95,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 async def check_credentials() -> bool:
     """Check if all required credentials are present in .env"""
@@ -321,12 +322,15 @@ async def get_power_data() -> Dict[str, Any]:
 
 
 @app.get("/api/power-data/history")
-async def get_power_data_history(limit: int = 576) -> Dict[str, Any]:
+async def get_power_data_history(
+        limit: int = 288,
+        since_date: Optional[str] = None
+) -> Dict[str, Any]:
     """
     Get historical power station data from the database
     Query parameter 'limit' controls how many records to return (default: 576)
     """
-    history = get_all_power_data(limit=limit)
+    history = get_all_power_data(limit=limit, since_date=since_date)
 
     return {
         "count": len(history),

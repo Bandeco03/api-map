@@ -66,9 +66,14 @@ const option = ref({
   xAxis: {
     type: 'category',
     data: [],
+    min: 0, // Start from 0 to ensure proper spacing
     axisLabel: {
       rotate: 45,
-      interval: 0
+      interval: 0,
+      formatter: (value) => {
+        const parts = value.split(' ')
+        return parts.length > 1 ? parts[1] : value
+      }
     }
   },
   yAxis: {

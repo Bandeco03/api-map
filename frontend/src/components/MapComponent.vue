@@ -71,7 +71,6 @@ const option = ref({
     max: 2500,
     left: 'left',
     top: 'bottom',
-    text: ['Alto', 'Baixo'],
     title: ['Potência (MW)'],
     inRange: {color: ['#ECECEC', '#FF7900']},
     calculable: true,
@@ -81,7 +80,6 @@ const option = ref({
     {
       type: 'map',
       map: 'BRA',
-      roam: 'scale',
       scaleLimit: {min: 0.8, max: 10},
       layoutCenter: ['50%', '50%'],
       layoutSize: '100%',
@@ -156,29 +154,24 @@ const handleMapClick = (params) => {
 }
 
 // Função para atualizar a visualização dos estados selecionados no mapa
-const updateMapSelection = (selectedStates) => {
-  option.value.series[0].data = stateData.value.map(state => {
-    const isSelected = selectedStates.some(s => s.name === state.name)
-    return {
-      ...state,
-      itemStyle: isSelected ? {
-        areaColor: '#ff6b6b',
-        borderColor: '#c92a2a',
-        borderWidth: 2
-      } : undefined
-    }
-  })
-}
+// const updateMapSelection = (selectedStates) => {
+//   option.value.series[0].data = stateData.value.map(state => {
+//     const isSelected = selectedStates.some(s => s.name === state.name)
+//     return {
+//       ...state,
+//       itemStyle: isSelected ? {
+//         areaColor: '#ff6b6b',
+//         borderColor: '#c92a2a',
+//         borderWidth: 2
+//       } : undefined
+//     }
+//   })
+// }
 
 onMounted(() => {
   emitter.on('api-data', (data) => {
     fetchData(data)
   })
-
-  // Ouvir mudanças na seleção de estados
-  // emitter.on('state-selection-changed', (selectedStates) => {
-  //   updateMapSelection(selectedStates)
-  // })
 })
 </script>
 

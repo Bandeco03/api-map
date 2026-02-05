@@ -7,7 +7,7 @@ const loading = ref(false)
 
 onMounted(() => {
   emitter.on('loading-start', () => {
-    loading.value = true
+    loading.value = false
   })
   emitter.on('loading-stop', () => {
     loading.value = false

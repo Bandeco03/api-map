@@ -1,7 +1,9 @@
 <script setup>
-import {onMounted, ref} from 'vue'
+import {onBeforeUnmount, onMounted, ref} from 'vue'
 import apiService from '../services/api.js'
 import emitter from "@/eventBus.js";
+
+let intervalId = null
 
 async function fetchData() {
   emitter.emit('loading-start')
@@ -27,16 +29,24 @@ async function fetchData() {
 
 onMounted(() => {
   fetchData()
+
+  intervalId = setInterval(fetchData, 5 * 60 * 1000) // Update every 5 minutes
+})
+
+onBeforeUnmount(() => {
+  if (intervalId) {
+    clearInterval(intervalId)
+  }
 })
 
 </script>
 
 <template>
-  <div class="controls">
-    <button @click="fetchData" class="update-btn">
-      Carregar Dados da API
-    </button>
-  </div>
+<!--  <div class="controls">-->
+<!--    <button @click="fetchData" class="update-btn">-->
+<!--      Carregar Dados da API-->
+<!--    </button>-->
+<!--  </div>-->
 
 </template>
 

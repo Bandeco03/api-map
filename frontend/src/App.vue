@@ -1,8 +1,8 @@
 <script setup>
 import MapComponent from './components/MapComponent.vue'
-import FetchAPIButton from "@/components/FetchAPIButton.vue";
+import FetchApi from "@/components/FetchAPI.vue";
 import LoadingScreen from "@/components/LoadingScreen.vue";
-import LineChart from "@/components/LineChart.vue";
+import HistoryLineChart from "@/components/HistoryLineChart.vue";
 // import StateCompare from "@/components/StateCompare.vue";
 import InfoViewer from "@/components/InfoViewer.vue";
 import StateTable from "@/components/StateTable.vue";
@@ -12,14 +12,14 @@ import StateTable from "@/components/StateTable.vue";
   <LoadingScreen />
   <InfoViewer />
   <main>
-    <FetchAPIButton />
+    <FetchApi />
     <div class="map-info-container">
       <MapComponent />
 <!--      <StateCompare />-->
       <StateTable />
     </div>
     <div>
-      <LineChart :height="'50rem'" :yAxisInterval="300" />
+      <HistoryLineChart :height="'50rem'" :yAxisInterval="300" />
     </div>
   </main>
 </template>

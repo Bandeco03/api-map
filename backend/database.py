@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timezone, timedelta
+from typing import Optional
 import json
 
 Base = declarative_base()
@@ -71,10 +72,16 @@ def get_latest_power_data():
         db.close()
 
 
-def get_all_power_data(limit: int = 576): # 576 records = 48 hours (5 min intervals)
+def get_all_power_data(limit: int = 576, since_date: Optional[str] = None): # 576 records = 48 hours (5 min intervals)
     """Get all power data records with optional limit"""
     db = SessionLocal()
     try:
+        query = db.query(PowerDataRecord).order_by(PowerDataRecord.timestamp.desc())
+
+        if since_date:
+            since_datetime = datetime.fromisoformat(since_date)
+            query = query.filter(PowerDataRecord.timestamp >= since_datetime)
+
         records = db.query(PowerDataRecord).order_by(PowerDataRecord.timestamp.desc()).limit(limit).all()
         return [record.to_dict() for record in records]
     finally:
