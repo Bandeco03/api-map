@@ -63,7 +63,6 @@ onMounted(() => {
 
 <template>
   <div class="state-table-container">
-    <h2>Potência por Estado</h2>
     <div class="table-wrapper">
       <table class="state-table">
         <thead>

@@ -51,7 +51,8 @@ const option = ref({
     left: 'center',
     textStyle: {
       color: getComputedStyle(document.documentElement).getPropertyValue('--color-text').trim()
-    }
+    },
+    show: false
   },
   tooltip: {
     trigger: 'axis',
@@ -235,8 +236,7 @@ onBeforeUnmount(() => {
 /* Desktop */
 @media (min-width: 1024px) {
   .chart {
-    height: 500px;
-    min-height: 500px;
+    height: 300px;
   }
 
   .loading-overlay,

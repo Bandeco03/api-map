@@ -74,7 +74,7 @@ const option = ref({
     title: ['Potência (MW)'],
     inRange: {color: ['#ECECEC', '#FF7900']},
     calculable: true,
-    show: true
+    show: false
   },
   series: [
     {
@@ -97,7 +97,7 @@ const option = ref({
           if (geoData) {
             const sigla = geoData.properties.sigla
             if (stateInfo) {
-              const powerMW = (stateInfo.activePower / 1000000).toFixed(0)
+              // const powerMW = (stateInfo.activePower / 1000000).toFixed(0)
               const rate = (stateInfo.activePowerRate).toFixed(1)
               return `${sigla}\n${rate} %`
             }

@@ -7,7 +7,7 @@ import energyImg from '../assets/energy.png'
 
 let totalActivePower = ref(0)
 let totalInstalledPower = ref(0)
-let isOpen = ref(false) // Menu boolean state (visible/hidden)
+let isOpen = ref(true) // Menu boolean state (visible/hidden)
 
 async function updateTotals(data) {
   const totals = apiUtils.dataProcessSum(data)
