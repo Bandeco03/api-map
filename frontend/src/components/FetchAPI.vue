@@ -30,7 +30,7 @@ async function fetchData() {
 onMounted(() => {
   fetchData()
 
-  intervalId = setInterval(fetchData, 5 * 60 * 1000) // Update every 5 minutes
+  intervalId = setInterval(fetchData, 2.5 * 60 * 1000) // Update every 2.5 minutes
 })
 
 onBeforeUnmount(() => {

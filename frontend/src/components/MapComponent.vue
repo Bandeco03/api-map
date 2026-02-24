@@ -178,6 +178,14 @@ onMounted(() => {
 <template>
   <div class="main-container">
     <div class="content-wrapper">
+      <!-- Coração pulsando atrás do mapa -->
+      <div class="heart-background">
+        <svg viewBox="0 0 100 100" class="heart-icon">
+          <path d="M50,85 C20,70 5,55 5,40 C5,25 15,15 25,15 C35,15 45,25 50,35 C55,25 65,15 75,15 C85,15 95,25 95,40 C95,55 80,70 50,85 Z"
+                fill="currentColor"/>
+        </svg>
+      </div>
+
       <!-- Mapa -->
       <div class="map-container">
         <v-chart
@@ -219,12 +227,45 @@ button {
   align-items: flex-start;
   padding: 10px;
   overflow: hidden;
+  position: relative;
+}
+
+.heart-background {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 900px;
+  height: 800px;
+  opacity: 0.15;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.heart-icon {
+  width: 100%;
+  height: 100%;
+  color: #FF7900;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1);
+  }
 }
 
 .map-container {
   flex: 1;
   position: relative;
   width: 100%;
+  z-index: 2;
 }
 
 .map-chart {
